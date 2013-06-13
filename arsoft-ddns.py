@@ -38,12 +38,14 @@ def update_dns_record(service_url, hostname, address, password, recordtype='A'):
             if response.getcode() == 200:
                 ret = True
             else:
+                print(response_data)
                 if 'error' in response_data:
                     print(response_data['error'])
                 ret = False
         else:
             ret = False
     except urllib2.HTTPError as e:
+        print(e)
         ret = False
     return ret
 
@@ -82,6 +84,7 @@ class ddnsApp(object):
         if update_dns_record(args.service_url, args.hostname, args.address, args.password, args.rrtype):
             ret = 0
         else:
+            print('update failed.')
             ret = 1
         
         return ret
