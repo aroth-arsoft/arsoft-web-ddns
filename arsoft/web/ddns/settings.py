@@ -14,6 +14,6 @@ SITE_ID = 1
 DEBUG=True
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = '!lo6bsh)zoifi5(@r2u2&amp;#z=5(5cd6sz$z10iqvzdyv2z-u3v@'
+SECRET_KEY = '}zxYtIXN]A6w~|f!;[\jTl*uN$Dwc/Q;b}CI~P|Jh<|?#keD`>VbxRMFrOZ*9xS'
 
 

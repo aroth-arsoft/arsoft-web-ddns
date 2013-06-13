@@ -1,6 +1,7 @@
 from django.template import RequestContext, loader
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponse
+import json
 
 def home(request):
     try:
@@ -23,55 +24,27 @@ def home(request):
     if 'HTTP_AUTHORIZATION' in request.META:
         username = request.META['HTTP_AUTHORIZATION']
 
-    title = 'Change password service'
-
-    t = loader.get_template('home.html')
-    c = RequestContext( request, { 
-        'errormessage':error_message, 
-        'statusmessage':status_message,
-        'username':username,
-        'title':title
-        })
-    return HttpResponse(t.render(c))
+    response_data = {}
+    response_data['error'] = 'no operation specified.'
+    return HttpResponse(json.dumps(response_data), content_type="application/json")
 
 def update(request):
     try:
-        username = request.POST['username']
-        oldpassword = request.POST['oldpassword']
-        newpassword = request.POST['newpassword']
-        confpassword = request.POST['confpassword']
-    except KeyError:
-        error_message = 'Insufficient data.'
-        username = None
+        hostname = request.GET['host']
+        address = request.GET['addr']
+        rrtype = request.GET['type']
+        password = request.GET['pw']
+    except KeyError as e:
+        error_message = 'Missing parameter %s' % (str(e))
+        hostname = None
         pass
         
-    if username:
-        if newpassword != confpassword:
-            error_message = 'New password and confirmation password do not match.'
-            result_code = False
-        elif oldpassword == '':
-            error_message = 'Current password not specified.'
-            result_code = False
-        elif newpassword == '':
-            error_message = 'No new password specified.'
-            result_code = False
-        else:
-            (ret, error_message) = kpasswd(username, oldpassword, newpassword)
-            if ret:
-                error_message = 'Successful.'
-                result_code = True
-            else:
-                error_message = 'Failed to change password. ' + error_message
-                result_code = False
+    if hostname:
+        error_message = 'All ok.'
     else:
         error_message = 'No user name specified.'
         result_code = False
 
-
-    # Always return an HttpResponseRedirect after successfully dealing
-    # with POST data. This prevents data from being posted twice if a
-    # user hits the Back button.
-    request.session['username'] = username
-    request.session['error_message'] = error_message
-    request.session['result'] = result_code
-    return HttpResponseRedirect(reverse('arsoft.web.update.views.home'))
+    response_data = {}
+    response_data['error'] = error_message
+    return HttpResponse(json.dumps(response_data), content_type="application/json")

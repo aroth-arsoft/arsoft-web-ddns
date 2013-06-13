@@ -10,10 +10,8 @@ setup(name='arsoft-web-ddns',
 		author_email='aroth@arsoft-online.com',
 		url='http://www.arsoft-online.com/',
 		packages=['arsoft.web.ddns'],
-		scripts=[],
+		scripts=['arsoft-ddns'],
 		data_files=[
             ('/usr/share/pyshared/arsoft/web/ddns', ['dispatch.fcgi']),
-            ('/etc/arsoft/web/ddns/static', ['arsoft/web/ddns/static/main.css']),
-            ('/etc/arsoft/web/ddns/templates', ['arsoft/web/ddns/templates/home.html']),
             ]
 		)
