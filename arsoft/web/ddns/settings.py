@@ -4,12 +4,23 @@
 
 # Django settings for arsoft.web.ddns project.
 from arsoft.web.utils import initialize_settings
+import os.path
 
 # use initialize_settings from arsoft.web.utils to get the initial settings
 # for a Django web application.
 initialize_settings(__name__, __file__)
 
 SITE_ID = 1
+
+INSTALLED_APPS.append('django.contrib.admin')
+MIDDLEWARE_CLASSES.append('django.contrib.auth.middleware.AuthenticationMiddleware')
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(APP_DATA_DIR, 'ddns.db')
+    }
+}
 
 DEBUG=True
 

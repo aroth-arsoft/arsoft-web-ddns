@@ -10,6 +10,7 @@ import dns.update
 import dns.resolver
 import dns.rdatatype
 import dns.rdtypes
+from arsoft.web.ddns.models import DDNSModel
 
 logger = logging.getLogger('arsoft.web.ddns')
 
@@ -93,70 +94,71 @@ def _get_request_param(request, paramname, default_value=None):
     
 
 def update(request):
-    response_data = {}
-
-    logger.warning('update req')
     (config_ok, config_errors) = _check_config()
     if not config_ok:
         logger.error(config_errors)
-        response_data['error'] = config_errors
-        return HttpResponse(json.dumps(response_data), status=500, content_type="application/json")
-
-
-    hostname = _get_request_param(request, 'host', '')
-    address = _get_request_param(request, 'addr', '')
-    password = _get_request_param(request, 'pw', '')
-    if len(address):
-        if 'type' in request.GET:
-            rdtype = dns.rdatatype.from_text(_get_request_param(request, 'type', settings.DEFAULT_RRTYPE))
-            if arsoft.dnsutils.is_valid_ipv4(address) or arsoft.dnsutils.is_valid_ipv6(address):
+        response_data = '\n'.join(config_errors)
+        response_status = 500
+    else:
+        hostname = _get_request_param(request, 'host', '')
+        address = _get_request_param(request, 'addr', '')
+        password = _get_request_param(request, 'pw', '')
+        if len(address):
+            if 'type' in request.GET:
+                rdtype = dns.rdatatype.from_text(_get_request_param(request, 'type', settings.DEFAULT_RRTYPE))
+                if arsoft.dnsutils.is_valid_ipv4(address) or arsoft.dnsutils.is_valid_ipv6(address):
+                    address_valid = True
+                else:
+                    address_valid = False
+            elif arsoft.dnsutils.is_valid_ipv4(address):
+                rdtype = dns.rdtypes.IN.A
                 address_valid = True
-            else:
-                address_valid = False
-        elif arsoft.dnsutils.is_valid_ipv4(address):
-            rdtype = dns.rdtypes.IN.A
-            address_valid = True
-        elif arsoft.dnsutils.is_valid_ipv6(address):
-            rdtype = dns.rdtypes.IN.AAAA
-            address_valid = True
-    else:
-        address_valid = False
-
-    ttl = _get_request_param(request, 'ttl', settings.DEFAULT_TTL)
-    
-    print(hostname)
-    print(password)
-    print(address)
-    print(rdtype)
-
-    if len(hostname) and len(password) and len(address) and address_valid:
-        
-        dns_update_keyfile = os.path.join(settings.CONFIG_DIR, 'dns-update.key')
-        Origin, Name = parse_name(Origin=None, Name=hostname)
-        response_data = 'Update zone %s' % (Origin)
-        update = dns.update.Update(Origin)
-        arsoft.dnsutils.use_key_file(update, dns_update_keyfile)
-        update.replace(hostname, ttl, rdtype, address)
-
-        try:
-            response = dns.query.tcp(update, settings.DNS_SERVER, timeout=settings.DNS_TIMEOUT)
-            response_data = str(response)
-            print "Return code: %i" % response.rcode()
-            if response.rcode() == 0:
-                response_status = 200
-            else:
-                response_status = 503
-        except dns.exception.Timeout:
-            response_data = 'timeout'
-            response_status = 503
-        except dns.exception.DNSException as e:
-            response_data = 'DNS error %s' % (str(e.message))
-            response_status = 503
-    else:
-        response_status = 400
-        if not address_valid:
-            response_data = 'given address %s is invalid.' % (str(address))
+            elif arsoft.dnsutils.is_valid_ipv6(address):
+                rdtype = dns.rdtypes.IN.AAAA
+                address_valid = True
         else:
-            response_data = 'missing parameter(s)'
+            address_valid = False
+
+        ttl = _get_request_param(request, 'ttl', settings.DEFAULT_TTL)
+
+        if len(hostname) and len(password) and len(address) and address_valid:
+            host_from_db = DDNSModel.objects.filter(hostname=hostname)
+            print(host_from_db)
+            print(len(host_from_db))
+            if host_from_db is None or len(host_from_db) != 1:
+                response_data = 'Host %s not configured' % (str(hostname))
+                response_status = 503
+            elif host_from_db[0].password != password:
+                response_data = 'Password for host %s does not match' % (str(hostname))
+                response_status = 503
+            else:
+                dns_update_keyfile = os.path.join(settings.CONFIG_DIR, 'dns-update.key')
+                Origin, Name = parse_name(Origin=None, Name=hostname)
+                response_data = 'Update zone %s' % (Origin)
+                update = dns.update.Update(Origin)
+                arsoft.dnsutils.use_key_file(update, dns_update_keyfile)
+                update.replace(hostname, ttl, rdtype, address)
+
+                try:
+                    response = dns.query.tcp(update, settings.DNS_SERVER, timeout=settings.DNS_TIMEOUT)
+                    print "Return code: %i" % response.rcode()
+                    if response.rcode() == 0:
+                        response_data = 'Updated %s to %s' % (hostname, address)
+                        response_status = 200
+                    else:
+                        response_data = str(response)
+                        response_status = 503
+                except dns.exception.Timeout:
+                    response_data = 'timeout'
+                    response_status = 503
+                except dns.exception.DNSException as e:
+                    response_data = 'DNS error %s' % (str(e.message))
+                    response_status = 503
+        else:
+            response_status = 400
+            if not address_valid:
+                response_data = 'given address %s is invalid.' % (str(address))
+            else:
+                response_data = 'missing parameter(s)'
 
     return HttpResponse(response_data, status=response_status, content_type="text/plain")
