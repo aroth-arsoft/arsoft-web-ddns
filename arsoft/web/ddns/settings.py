@@ -16,4 +16,9 @@ DEBUG=True
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = '}zxYtIXN]A6w~|f!;[\jTl*uN$Dwc/Q;b}CI~P|Jh<|?#keD`>VbxRMFrOZ*9xS'
 
+DEFAULT_TTL = 120
+DEFAULT_RRTYPE = 'A'
 
+#DNS_SERVER = '127.0.0.1'
+DNS_SERVER = '192.168.192.1'
+DNS_TIMEOUT = 10

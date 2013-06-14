@@ -5,9 +5,11 @@ from django.conf import settings
 import json
 import logging
 import os.path
-import arsoft.dns
+import arsoft.dnsutils
 import dns.update
 import dns.resolver
+import dns.rdatatype
+import dns.rdtypes
 
 logger = logging.getLogger('arsoft.web.ddns')
 
@@ -57,13 +59,13 @@ def home(request):
         username = request.session['username']
         result = request.session['result']
         if result:
-            status_message = request.session['error_message']
-            error_message = ''
+            status_message = request.session['response_data']
+            response_data = ''
         else:
-            error_message = request.session['error_message']
+            response_data = request.session['response_data']
             status_message = ''
     except (KeyError):
-        error_message = ''
+        response_data = ''
         status_message = ''
         username = ''
         pass
@@ -77,6 +79,19 @@ def home(request):
     response_data['error'] = 'no operation specified.'
     return HttpResponse(json.dumps(response_data), content_type="application/json")
 
+def _get_request_param(request, paramname, default_value=None):
+    if paramname in request.GET:
+        if isinstance(default_value, int):
+            ret = int(request.GET[paramname])
+        elif isinstance(default_value, str) or isinstance(default_value, unicode):
+            ret = str(request.GET[paramname])
+        else:
+            ret = request.GET[paramname]
+    else:
+        ret = default_value
+    return ret
+    
+
 def update(request):
     response_data = {}
 
@@ -87,26 +102,61 @@ def update(request):
         response_data['error'] = config_errors
         return HttpResponse(json.dumps(response_data), status=500, content_type="application/json")
 
-    try:
-        hostname = request.GET['host']
-        address = request.GET['addr']
-        rrtype = request.GET['type']
-        password = request.GET['pw']
-    except KeyError as e:
-        error_message = 'Missing parameter %s' % (str(e))
-        hostname = None
-        pass
-        
-    if hostname:
-        dns_update_keyfile = os.path.join(settings.CONFIG_DIR, 'dns-update.key')
-        error_message = 'All ok.'
-        keyring = arsoft.dns.read_key_file(dns_update_keyfile)
-        Origin, Name = parse_name(Origin=None, Name=hostname)
-        update = dns.update.Update(Origin, keyring=keyring)
-    else:
-        error_message = 'No user name specified.'
-        result_code = False
 
-    response_data = {}
-    response_data['error'] = error_message
-    return HttpResponse(json.dumps(response_data), content_type="application/json")
+    hostname = _get_request_param(request, 'host', '')
+    address = _get_request_param(request, 'addr', '')
+    password = _get_request_param(request, 'pw', '')
+    if len(address):
+        if 'type' in request.GET:
+            rdtype = dns.rdatatype.from_text(_get_request_param(request, 'type', settings.DEFAULT_RRTYPE))
+            if arsoft.dnsutils.is_valid_ipv4(address) or arsoft.dnsutils.is_valid_ipv6(address):
+                address_valid = True
+            else:
+                address_valid = False
+        elif arsoft.dnsutils.is_valid_ipv4(address):
+            rdtype = dns.rdtypes.IN.A
+            address_valid = True
+        elif arsoft.dnsutils.is_valid_ipv6(address):
+            rdtype = dns.rdtypes.IN.AAAA
+            address_valid = True
+    else:
+        address_valid = False
+
+    ttl = _get_request_param(request, 'ttl', settings.DEFAULT_TTL)
+    
+    print(hostname)
+    print(password)
+    print(address)
+    print(rdtype)
+
+    if len(hostname) and len(password) and len(address) and address_valid:
+        
+        dns_update_keyfile = os.path.join(settings.CONFIG_DIR, 'dns-update.key')
+        Origin, Name = parse_name(Origin=None, Name=hostname)
+        response_data = 'Update zone %s' % (Origin)
+        update = dns.update.Update(Origin)
+        arsoft.dnsutils.use_key_file(update, dns_update_keyfile)
+        update.replace(hostname, ttl, rdtype, address)
+
+        try:
+            response = dns.query.tcp(update, settings.DNS_SERVER, timeout=settings.DNS_TIMEOUT)
+            response_data = str(response)
+            print "Return code: %i" % response.rcode()
+            if response.rcode() == 0:
+                response_status = 200
+            else:
+                response_status = 503
+        except dns.exception.Timeout:
+            response_data = 'timeout'
+            response_status = 503
+        except dns.exception.DNSException as e:
+            response_data = 'DNS error %s' % (str(e.message))
+            response_status = 503
+    else:
+        response_status = 400
+        if not address_valid:
+            response_data = 'given address %s is invalid.' % (str(address))
+        else:
+            response_data = 'missing parameter(s)'
+
+    return HttpResponse(response_data, status=response_status, content_type="text/plain")
