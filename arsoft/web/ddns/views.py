@@ -5,6 +5,7 @@ from django.conf import settings
 import json
 import logging
 import os.path
+import datetime
 import arsoft.dnsutils
 import dns.update
 import dns.resolver
@@ -143,6 +144,7 @@ def update(request):
                     response = dns.query.tcp(update, settings.DNS_SERVER, timeout=settings.DNS_TIMEOUT)
                     print "Return code: %i" % response.rcode()
                     if response.rcode() == 0:
+                        host_from_db.update(updated=datetime.datetime.now())
                         response_data = 'Updated %s to %s' % (hostname, address)
                         response_status = 200
                     else:
