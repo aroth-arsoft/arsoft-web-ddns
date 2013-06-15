@@ -141,7 +141,7 @@ def update(request):
                 update.replace(hostname, ttl, rdtype, address)
 
                 try:
-                    response = dns.query.tcp(update, settings.DNS_SERVER, timeout=settings.DNS_TIMEOUT)
+                    response = dns.query.tcp(update, settings.DNS_SERVER, timeout=settings.DNS_TIMEOUT, source=DNS_QUERY_SOURCE, source_port=DNS_QUERY_SOURCE_PORT)
                     print "Return code: %i" % response.rcode()
                     if response.rcode() == 0:
                         host_from_db.update(updated=datetime.datetime.now())

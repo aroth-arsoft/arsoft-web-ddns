@@ -7,3 +7,12 @@ DEB_COMPRESS_EXCLUDE := .py
 
 %:
 	dh $@ --buildsystem=python_distutils --with=python2
+
+override_dh_clean:
+	dh_clean -O--buildsystem=python_distutils
+	rm config/*.key || true
+	rm data/* || true
+
+override_dh_auto_install:
+	dh_auto_install -O--buildsystem=python_distutils
+	install -d $(CURDIR)/debian/arsoft-web-ddns/var/lib/arsoft/web/ddns

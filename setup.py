@@ -13,5 +13,6 @@ setup(name='arsoft-web-ddns',
 		scripts=['arsoft-ddns'],
 		data_files=[
             ('/usr/share/pyshared/arsoft/web/ddns', ['dispatch.fcgi']),
+            ('/etc/arsoft/web/ddns', ['config/settings.py']),
             ]
 		)
