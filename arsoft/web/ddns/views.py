@@ -2,7 +2,6 @@ from django.template import RequestContext, loader
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponse
 from django.conf import settings
-import json
 import logging
 import os.path
 import datetime
@@ -57,29 +56,9 @@ def _get_update_object(self, name, keyring):
     
 
 def home(request):
-    try:
-        username = request.session['username']
-        result = request.session['result']
-        if result:
-            status_message = request.session['response_data']
-            response_data = ''
-        else:
-            response_data = request.session['response_data']
-            status_message = ''
-    except (KeyError):
-        response_data = ''
-        status_message = ''
-        username = ''
-        pass
-
-    if 'REMOTE_USER' in request.META:
-        username = request.META['REMOTE_USER']
-    if 'HTTP_AUTHORIZATION' in request.META:
-        username = request.META['HTTP_AUTHORIZATION']
-
-    response_data = {}
-    response_data['error'] = 'no operation specified.'
-    return HttpResponse(json.dumps(response_data), content_type="application/json")
+    response_status = 200
+    response_data = 'no operation specified.'
+    return HttpResponse(response_data, status=response_status, content_type="text/plain")
 
 def _get_request_param(request, paramname, default_value=None):
     if paramname in request.GET:
