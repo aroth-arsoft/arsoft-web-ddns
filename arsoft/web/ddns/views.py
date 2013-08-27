@@ -11,6 +11,7 @@ import dns.resolver
 import dns.rdatatype
 import dns.rdtypes
 import dns.rcode
+import dns.tsig
 from arsoft.web.ddns.models import DDNSModel
 
 logger = logging.getLogger('arsoft.web.ddns')
@@ -18,7 +19,6 @@ logger = logging.getLogger('arsoft.web.ddns')
 def _check_config():
     ret = True
     errors = []
-    logger.error('settings=%s' % (str(settings)))
     if ret:
         dns_update_keyfile = os.path.join(settings.CONFIG_DIR, 'dns-update.key')
         if not os.path.isfile(dns_update_keyfile):
@@ -138,8 +138,10 @@ def update(request):
                 Origin, Name = parse_name(Origin=None, Name=hostname)
                 response_data = 'Update zone %s' % (Origin)
                 update = dns.update.Update(Origin)
-                if not arsoft.dnsutils.use_key_file(update, dns_update_keyfile):
+                if not arsoft.dnsutils.use_key_file(update, dns_update_keyfile, arsoft.dnsutils.KeyFileFormat.TSIG):
                     logger.error('Failed to use keyfile %s' % (dns_update_keyfile))
+                else:
+                    logger.error('Use dns keyalgo=%s, name=%s, ring=%s' % (update.keyalgorithm, update.keyname, update.keyring))
                 logger.error('Update hostname=%s, ttl=%s, rdtype=%s, addr=%s' % (hostname, ttl, rdtype, address))
                 update.replace(hostname, ttl, rdtype, address)
 
@@ -160,8 +162,11 @@ def update(request):
                 except dns.exception.Timeout:
                     response_data = 'timeout'
                     response_status = 503
+                except dns.tsig.BadSignature:
+                    response_data = 'BadSignature using key %s to update %s to %s in ' % (update.keyname, hostname, address, Origin)
+                    response_status = 503
                 except dns.exception.DNSException as e:
-                    response_data = 'DNS error %s' % (str(e.message))
+                    response_data = 'DNS error %s %s' % (str(type(e)), str(e))
                     response_status = 503
         else:
             response_status = 400
