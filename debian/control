@@ -8,6 +8,6 @@ X-Python-Version: >=2.7
 
 Package: arsoft-web-ddns
 Architecture: all
-Depends: arsoft-python-web (>= 1.42), ${python:Depends}, ${misc:Depends}
+Depends: arsoft-python-web (>= 1.42), python-sqlite, sqlite3, ${python:Depends}, ${misc:Depends}
 Description: simple dynamic DNS service
  For updating the DNS records to match your current IP address in the internet.

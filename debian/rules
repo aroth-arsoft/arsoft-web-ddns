@@ -15,4 +15,4 @@ override_dh_clean:
 
 override_dh_auto_install:
 	dh_auto_install -O--buildsystem=python_distutils
-	install -d $(CURDIR)/debian/arsoft-web-ddns/var/lib/arsoft/web/ddns
+	install -o www-data -g www-data -m 0750 -d $(CURDIR)/debian/arsoft-web-ddns/var/lib/arsoft/web/ddns

@@ -1,3 +1,9 @@
+arsoft-web-ddns (1.1) raring; urgency=low
+
+  * make sure to install the database for the app along with the package
+
+ -- Andreas Roth <aroth@arsoft-online.com>  Tue, 27 Aug 2013 07:22:14 +0200
+
 arsoft-web-ddns (1.0) raring; urgency=low
 
   * initial release
