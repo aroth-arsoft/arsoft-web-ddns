@@ -10,6 +10,7 @@ import dns.update
 import dns.resolver
 import dns.rdatatype
 import dns.rdtypes
+import dns.rcode
 from arsoft.web.ddns.models import DDNSModel
 
 logger = logging.getLogger('arsoft.web.ddns')
@@ -17,10 +18,14 @@ logger = logging.getLogger('arsoft.web.ddns')
 def _check_config():
     ret = True
     errors = []
+    logger.error('settings=%s' % (str(settings)))
     if ret:
         dns_update_keyfile = os.path.join(settings.CONFIG_DIR, 'dns-update.key')
         if not os.path.isfile(dns_update_keyfile):
             errors.append('DNS update key %s missing' % dns_update_keyfile)
+            ret = False
+        elif not os.access(dns_update_keyfile, os.R_OK):
+            errors.append('DNS update key %s not readable' % dns_update_keyfile)
             ret = False
     return (ret, errors)
     
@@ -106,11 +111,13 @@ def update(request):
                 else:
                     address_valid = False
             elif arsoft.dnsutils.is_valid_ipv4(address):
-                rdtype = dns.rdtypes.IN.A
+                rdtype = dns.rdatatype.from_text('A')
                 address_valid = True
             elif arsoft.dnsutils.is_valid_ipv6(address):
-                rdtype = dns.rdtypes.IN.AAAA
+                rdtype = dns.rdatatype.from_text('AAAA')
                 address_valid = True
+            else:
+                address_valid = False
         else:
             address_valid = False
 
@@ -118,8 +125,8 @@ def update(request):
 
         if len(hostname) and len(password) and len(address) and address_valid:
             host_from_db = DDNSModel.objects.filter(hostname=hostname)
-            print(host_from_db)
-            print(len(host_from_db))
+            #print(host_from_db)
+            #print(len(host_from_db))
             if host_from_db is None or len(host_from_db) != 1:
                 response_data = 'Host %s not configured' % (str(hostname))
                 response_status = 503
@@ -131,18 +138,24 @@ def update(request):
                 Origin, Name = parse_name(Origin=None, Name=hostname)
                 response_data = 'Update zone %s' % (Origin)
                 update = dns.update.Update(Origin)
-                arsoft.dnsutils.use_key_file(update, dns_update_keyfile)
+                if not arsoft.dnsutils.use_key_file(update, dns_update_keyfile):
+                    logger.error('Failed to use keyfile %s' % (dns_update_keyfile))
+                logger.error('Update hostname=%s, ttl=%s, rdtype=%s, addr=%s' % (hostname, ttl, rdtype, address))
                 update.replace(hostname, ttl, rdtype, address)
 
                 try:
-                    response = dns.query.tcp(update, settings.DNS_SERVER, timeout=settings.DNS_TIMEOUT, source=DNS_QUERY_SOURCE, source_port=DNS_QUERY_SOURCE_PORT)
-                    print "Return code: %i" % response.rcode()
-                    if response.rcode() == 0:
+                    response = dns.query.tcp(update, settings.DNS_SERVER, timeout=settings.DNS_TIMEOUT, source=settings.DNS_QUERY_SOURCE, source_port=settings.DNS_QUERY_SOURCE_PORT)
+                    #print "Return code: %i" % response.rcode()
+                    rcode = response.rcode()
+                    if rcode == dns.rcode.NOERROR:
                         host_from_db.update(updated=datetime.datetime.now())
-                        response_data = 'Updated %s to %s' % (hostname, address)
+                        response_data = 'Updated %s to %s in %s' % (hostname, address, Origin)
                         response_status = 200
+                    elif rcode == dns.rcode.NOTAUTH:
+                        response_data = 'Not authorized to update %s to %s in ' % (hostname, address, Origin)
+                        response_status = 503
                     else:
-                        response_data = str(response)
+                        response_data = 'Response code %s (%i), opcode %i: %s' % (dns.rcode.to_text(rcode), rcode, response.opcode(), response.to_text())
                         response_status = 503
                 except dns.exception.Timeout:
                     response_data = 'timeout'
