@@ -71,7 +71,20 @@ def _get_request_param(request, paramname, default_value=None):
     else:
         ret = default_value
     return ret
-    
+
+
+def _get_request_meta_param(request, paramname, default_value=None):
+    if paramname in request.META:
+        if isinstance(default_value, int):
+            ret = int(request.META[paramname])
+        elif isinstance(default_value, str) or isinstance(default_value, unicode):
+            ret = str(request.META[paramname])
+        else:
+            ret = request.META[paramname]
+    else:
+        ret = default_value
+    return ret
+
 
 def update(request):
     (config_ok, config_errors) = _check_config()
@@ -82,6 +95,8 @@ def update(request):
     else:
         hostname = _get_request_param(request, 'host', '')
         address = _get_request_param(request, 'addr', '')
+        if len(address) == 0:
+            address = _get_request_meta_param(request, 'REMOTE_ADDR', '')
         password = _get_request_param(request, 'pw', '')
         if len(address):
             if 'type' in request.GET:
