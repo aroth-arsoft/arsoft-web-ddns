@@ -7,8 +7,8 @@ class WebDDNSForm(forms.ModelForm):
         model = DDNSModel
 
 class WebDDNSAdmin(admin.ModelAdmin):
-    list_display = ('hostname', 'state', 'rdtype', 'user', 'created', 'updated')
-    fields = ['user', 'state', 'hostname', 'password', 'rdtype', 'update_url']
+    list_display = ('hostname', 'state', 'rdtype', 'user', 'address', 'created', 'updated')
+    fields = ['user', 'state', 'hostname', 'password', 'rdtype', 'address', 'update_url']
     readonly_fields = ('updated', 'created', 'update_url')
     form = WebDDNSForm
 

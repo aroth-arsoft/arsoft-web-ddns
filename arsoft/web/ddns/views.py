@@ -150,11 +150,11 @@ def update(request):
                     #print "Return code: %i" % response.rcode()
                     rcode = response.rcode()
                     if rcode == dns.rcode.NOERROR:
-                        host_from_db.update(updated=datetime.datetime.now())
+                        host_from_db.update(updated=datetime.datetime.now(), address=address)
                         response_data = 'Updated %s to %s in %s' % (hostname, address, Origin)
                         response_status = 200
                     elif rcode == dns.rcode.NOTAUTH:
-                        response_data = 'Not authorized to update %s to %s in ' % (hostname, address, Origin)
+                        response_data = 'Not authorized to update %s to %s in %s' % (hostname, address, Origin)
                         response_status = 503
                     else:
                         response_data = 'Response code %s (%i), opcode %i: %s' % (dns.rcode.to_text(rcode), rcode, response.opcode(), response.to_text())
@@ -163,7 +163,10 @@ def update(request):
                     response_data = 'timeout'
                     response_status = 503
                 except dns.tsig.BadSignature:
-                    response_data = 'BadSignature using key %s to update %s to %s in ' % (update.keyname, hostname, address, Origin)
+                    response_data = 'BadSignature using key %s to update %s to %s in %s' % (update.keyname, hostname, address, Origin)
+                    response_status = 503
+                except dns.tsig.PeerBadSignature:
+                    response_data = 'PeerBadSignature using key %s to update %s to %s in %s' % (update.keyname, hostname, address, Origin)
                     response_status = 503
                 except dns.exception.DNSException as e:
                     response_data = 'DNS error %s %s' % (str(type(e)), str(e))

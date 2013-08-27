@@ -34,6 +34,7 @@ class DDNSModel(models.Model):
     state = models.CharField('State', max_length=4, default='A', choices=STATE_CHOICES)
     created = models.DateTimeField('Created', auto_now=True, auto_now_add=True)
     updated = models.DateTimeField('Last updated', auto_now=True, auto_now_add=True)
+    address = models.GenericIPAddressField('address', default='0.0.0.0', protocol='both')
 
     class Meta:
         verbose_name = "host"
@@ -42,7 +43,7 @@ class DDNSModel(models.Model):
     def _get_update_url(self):
         "Returns the URL for the updating the host."
         return url_with_querystring(reverse('arsoft.web.ddns.views.update'),
-                    host=self.hostname, pw=self.password, addr='1.1.1.1')
+                    host=self.hostname, pw=self.password)
     update_url = property(_get_update_url)
 
     def __unicode__(self):
