@@ -12,6 +12,8 @@ import dns.rdatatype
 import dns.rdtypes
 import dns.rcode
 import dns.tsig
+import socket
+import errno
 from arsoft.web.ddns.models import DDNSModel
 
 logger = logging.getLogger('arsoft.web.ddns')
@@ -90,7 +92,6 @@ def _get_request_meta_param(request, paramname, default_value=None):
         ret = default_value
     return ret
 
-
 def update(request):
     (config_ok, config_errors) = _check_config()
     if not config_ok:
@@ -124,13 +125,13 @@ def update(request):
         ttl = _get_request_param(request, 'ttl', settings.DEFAULT_TTL)
 
         if len(hostname) and len(password) and len(address) and address_valid:
-            host_from_db = DDNSModel.objects.filter(hostname=hostname)
+            host_from_db = DDNSModel.objects.get(hostname=hostname)
             #print(host_from_db)
             #print(len(host_from_db))
-            if host_from_db is None or len(host_from_db) != 1:
+            if host_from_db is None:
                 response_data = 'Host %s not configured' % (str(hostname))
                 response_status = 503
-            elif host_from_db[0].password != password:
+            elif host_from_db.password != password:
                 response_data = 'Password for host %s does not match' % (str(hostname))
                 response_status = 503
             else:
@@ -146,19 +147,25 @@ def update(request):
                 update.replace(hostname, ttl, rdtype, address)
 
                 try:
-                    response = dns.query.tcp(update, settings.DNS_SERVER, timeout=settings.DNS_TIMEOUT, source=settings.DNS_QUERY_SOURCE, source_port=settings.DNS_QUERY_SOURCE_PORT)
-                    #print "Return code: %i" % response.rcode()
-                    rcode = response.rcode()
-                    if rcode == dns.rcode.NOERROR:
-                        host_from_db.update(updated=datetime.datetime.now(), address=address)
-                        response_data = 'Updated %s to %s in %s' % (hostname, address, Origin)
-                        response_status = 200
-                    elif rcode == dns.rcode.NOTAUTH:
-                        response_data = 'Not authorized to update %s to %s in %s' % (hostname, address, Origin)
-                        response_status = 503
-                    else:
-                        response_data = 'Response code %s (%i), opcode %i: %s' % (dns.rcode.to_text(rcode), rcode, response.opcode(), response.to_text())
-                        response_status = 503
+                    for zone_view in host_from_db.zone_views.all():
+                        source_address = zone_view.source_address
+                        source_port = zone_view.source_port
+                        dnsserver = zone_view.dnsserver
+                        response = dns.query.tcp(update, dnsserver, timeout=settings.DNS_TIMEOUT, source=source_address, source_port=zone_view.source_port)
+                        #print "Return code: %i" % response.rcode()
+                        rcode = response.rcode()
+                        if rcode == dns.rcode.NOERROR:
+                            host_from_db.update(updated=datetime.datetime.now(), address=address)
+                            response_data = 'Updated %s to %s in %s' % (hostname, address, Origin)
+                            response_status = 200
+                        elif rcode == dns.rcode.NOTAUTH:
+                            response_data = 'Not authorized to update %s to %s in %s' % (hostname, address, Origin)
+                            response_status = 503
+                            break
+                        else:
+                            response_data = 'Response code %s (%i), opcode %i: %s' % (dns.rcode.to_text(rcode), rcode, response.opcode(), response.to_text())
+                            response_status = 503
+                            break
                 except dns.exception.Timeout:
                     response_data = 'timeout'
                     response_status = 503
@@ -171,6 +178,13 @@ def update(request):
                 except dns.exception.DNSException as e:
                     response_data = 'DNS error %s %s' % (str(type(e)), str(e))
                     response_status = 503
+                except socket.error as (error_num, error_msg):
+                    if error_num == errno.ECONNREFUSED:
+                        response_data = 'Network error: Server %s refused connection (either DNS server is down or DNS server address is wrong)' % (dnsserver)
+                        response_status = 503
+                    else:
+                        response_data = 'Network error %i: %s' % (error_num, str(error_msg))
+                        response_status = 503
         else:
             response_status = 400
             if not address_valid:
