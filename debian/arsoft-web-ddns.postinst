@@ -4,7 +4,7 @@ PKG=arsoft-web-ddns
 case "$1" in
     configure|upgrade)
         /usr/lib/$PKG/manage.py syncdb --noinput
-        /usr/lib/$PKG/manage.py collectstatic -l --noinput
+        #/usr/lib/$PKG/manage.py collectstatic -l --noinput
         ;;
 esac
 

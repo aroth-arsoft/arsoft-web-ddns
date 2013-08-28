@@ -32,7 +32,7 @@ class DDNSZoneViewModel(models.Model):
 
 class DDNSModel(models.Model):
     user = models.ForeignKey(User)
-    hostname = models.CharField('Hostname', max_length=200, unique=True)
+    hostname = models.CharField('Hostname', max_length=200, unique=True, help_text='Enter full qualified domain name of the host')
     password = models.CharField('Password', max_length=200, default=generate_password)
     RDTYPE_CHOICES = (
         ('A', 'A'),
@@ -46,7 +46,7 @@ class DDNSModel(models.Model):
         ('D', 'Deleted'),
     )
     state = models.CharField('State', max_length=4, default='A', choices=STATE_CHOICES)
-    created = models.DateTimeField('Created', auto_now=True, auto_now_add=True)
+    created = models.DateTimeField('Created', auto_now=False, auto_now_add=True)
     updated = models.DateTimeField('Last updated', auto_now=True, auto_now_add=True)
     zone_views = models.ManyToManyField(DDNSZoneViewModel, verbose_name="list of zone views")
     

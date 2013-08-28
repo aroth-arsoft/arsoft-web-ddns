@@ -60,12 +60,6 @@ def _get_update_object(self, name, keyring):
         self._updates.append(update)
         return update
     return None
-    
-
-def home(request):
-    response_status = 200
-    response_data = 'no operation specified.'
-    return HttpResponse(response_data, status=response_status, content_type="text/plain")
 
 def _get_request_param(request, paramname, default_value=None):
     if paramname in request.GET:
@@ -92,6 +86,18 @@ def _get_request_meta_param(request, paramname, default_value=None):
         ret = default_value
     return ret
 
+def home(request):
+    response_status = 200
+    response_data = 'no operation specified.'
+    return HttpResponse(response_data, status=response_status, content_type="text/plain")
+
+def whoami(request):
+    remote_address = _get_request_meta_param(request, 'REMOTE_ADDR', '')
+    remote_host = _get_request_meta_param(request, 'REMOTE_HOST', '')
+    response_status = 200
+    response_data = '%s; %s' % (remote_address, remote_host)
+    return HttpResponse(response_data, status=response_status, content_type="text/plain")
+    
 def update(request):
     (config_ok, config_errors) = _check_config()
     if not config_ok:
@@ -143,8 +149,8 @@ def update(request):
                     logger.error('Failed to use keyfile %s' % (dns_update_keyfile))
                 else:
                     logger.error('Use dns keyalgo=%s, name=%s, ring=%s' % (update.keyalgorithm, update.keyname, update.keyring))
-                logger.error('Update hostname=%s, ttl=%s, rdtype=%s, addr=%s' % (hostname, ttl, rdtype, address))
-                update.replace(hostname, ttl, rdtype, address)
+                logger.error('Update origin=%s, hostname=%s, ttl=%s, rdtype=%s, addr=%s' % (Origin, Name, ttl, rdtype, address))
+                update.replace(Name, ttl, rdtype, address)
 
                 try:
                     for zone_view in host_from_db.zone_views.all():
@@ -155,7 +161,8 @@ def update(request):
                         #print "Return code: %i" % response.rcode()
                         rcode = response.rcode()
                         if rcode == dns.rcode.NOERROR:
-                            host_from_db.update(updated=datetime.datetime.now(), address=address)
+                            host_from_db.updated = datetime.datetime.now()
+                            host_from_db.save()
                             response_data = 'Updated %s to %s in %s' % (hostname, address, Origin)
                             response_status = 200
                         elif rcode == dns.rcode.NOTAUTH:

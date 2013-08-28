@@ -8,6 +8,7 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
     url(r'^$', 'arsoft.web.ddns.views.home', name='home'),
+    url(r'^whoami$', 'arsoft.web.ddns.views.whoami', name='whoami'),
     url(r'^update$', 'arsoft.web.ddns.views.update', name='update'),
 
     # Uncomment the next line to enable the admin:
