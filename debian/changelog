@@ -1,3 +1,9 @@
+arsoft-web-ddns (1.4) saucy; urgency=low
+
+  * remove dispatch.fcgi which is high configuration dependent
+
+ -- Andreas Roth <aroth@arsoft-online.com>  Mon, 17 Mar 2014 08:20:13 +0100
+
 arsoft-web-ddns (1.3.1) saucy; urgency=low
 
   * fixed install trouble when log file does not exist yet
