@@ -163,7 +163,8 @@ def update(request):
                         if rcode == dns.rcode.NOERROR:
                             host_from_db.updated = datetime.datetime.now()
                             host_from_db.save()
-                            response_data = 'Updated %s to %s in %s' % (hostname, address, Origin)
+                            #response_data = 'Updated %s to %s in %s' % (hostname, address, Origin)
+                            response_data = 'good %s' % (address)
                             response_status = 200
                         elif rcode == dns.rcode.NOTAUTH:
                             response_data = 'Not authorized to update %s to %s in %s' % (hostname, address, Origin)

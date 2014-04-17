@@ -1,3 +1,9 @@
+arsoft-web-ddns (1.5) saucy; urgency=low
+
+  * fixed response for updates to match routers expectation
+
+ -- Andreas Roth <aroth@arsoft-online.com>  Thu, 17 Apr 2014 19:42:15 +0200
+
 arsoft-web-ddns (1.4) saucy; urgency=low
 
   * remove dispatch.fcgi which is high configuration dependent
