@@ -3,14 +3,14 @@ PKG=arsoft-web-ddns
 
 case "$1" in
     configure|upgrade)
+        # make sure django log dir exists
+        [ ! -d /var/log/django ] && mkdir /var/log/django
         /usr/lib/$PKG/manage.py syncdb --noinput
         #/usr/lib/$PKG/manage.py collectstatic -l --noinput
         # make sure database is owned by www-data
         chown www-data:www-data -R /var/lib/arsoft/web/ddns
         # an nobody can except www-data can access the database files
         chmod 0750 /var/lib/arsoft/web/ddns
-        # make sure django log dir exists
-        [ ! -d /var/log/django ] && mkdir /var/log/django
         # ... and create the log file if it does not exist
         if [ ! -f /var/log/django/arsoft.web.ddns.log ]; then
             touch /var/log/django/arsoft.web.ddns.log
