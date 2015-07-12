@@ -5,3 +5,4 @@
 /docs
 /files
 /arsoft-web-ddns/
+*.debhelper.log

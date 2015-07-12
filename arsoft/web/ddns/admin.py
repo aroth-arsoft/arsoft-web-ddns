@@ -3,6 +3,7 @@ from django import forms
 from arsoft.web.ddns.models import DDNSModel, DDNSZoneViewModel
 
 class WebDDNSForm(forms.ModelForm):
+    exclude = []
     class Meta:
         model = DDNSModel
 
@@ -23,6 +24,7 @@ admin.site.register(DDNSModel, WebDDNSAdmin)
 
 
 class WebDDNSZoneViewForm(forms.ModelForm):
+    exclude = []
     class Meta:
         model = DDNSZoneViewModel
 
