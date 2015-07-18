@@ -148,7 +148,7 @@ def update(request):
                 if not arsoft.dnsutils.use_key_file(update, dns_update_keyfile, arsoft.dnsutils.KeyFileFormat.TSIG):
                     logger.error('Failed to use keyfile %s' % (dns_update_keyfile))
                 else:
-                    logger.error('Use dns keyalgo=%s, name=%s, ring=%s' % (update.keyalgorithm, update.keyname, update.keyring))
+                    logger.error('Use dns keyalgo=%s, name=%s, ring=**' % (update.keyalgorithm, update.keyname))
                 logger.error('Update origin=%s, hostname=%s, ttl=%s, rdtype=%s, addr=%s' % (Origin, Name, ttl, rdtype, address))
                 update.replace(Name, ttl, rdtype, address)
 
