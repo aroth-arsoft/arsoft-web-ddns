@@ -1,3 +1,9 @@
+arsoft-web-ddns (1.6) vivid; urgency=medium
+
+  * rebuild with latest fixes
+
+ -- Andreas Roth <aroth@arsoft-online.com>  Sun, 19 Jul 2015 10:29:16 +0200
+
 arsoft-web-ddns (1.5) saucy; urgency=low
 
   * fixed response for updates to match routers expectation
