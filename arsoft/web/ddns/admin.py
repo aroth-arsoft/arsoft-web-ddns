@@ -6,6 +6,7 @@ class WebDDNSForm(forms.ModelForm):
     exclude = []
     class Meta:
         model = DDNSModel
+        fields = '__all__'
 
 class WebDDNSAdmin(admin.ModelAdmin):
 
@@ -27,6 +28,7 @@ class WebDDNSZoneViewForm(forms.ModelForm):
     exclude = []
     class Meta:
         model = DDNSZoneViewModel
+        fields = '__all__'
 
 class WebDDNSZoneViewAdmin(admin.ModelAdmin):
     list_display = ('name', 'source_address', 'source_port', 'dnsserver')

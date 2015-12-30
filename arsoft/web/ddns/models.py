@@ -46,8 +46,8 @@ class DDNSModel(models.Model):
         ('D', 'Deleted'),
     )
     state = models.CharField('State', max_length=4, default='A', choices=STATE_CHOICES)
-    created = models.DateTimeField('Created', auto_now=False, auto_now_add=True)
-    updated = models.DateTimeField('Last updated', auto_now=True, auto_now_add=True)
+    created = models.DateTimeField('Created', auto_now_add=True)
+    updated = models.DateTimeField('Last updated', auto_now=True)
     zone_views = models.ManyToManyField(DDNSZoneViewModel, verbose_name="list of zone views")
     
     def zone_view_names(self):
