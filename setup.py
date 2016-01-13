@@ -4,7 +4,7 @@
 from distutils.core import setup
 
 setup(name='arsoft-web-ddns',
-		version='1.6',
+		version='1.7',
 		description='Simple dynamic DNS service',
 		author='Andreas Roth',
 		author_email='aroth@arsoft-online.com',

@@ -1,3 +1,9 @@
+arsoft-web-ddns (1.7) wily; urgency=medium
+
+  * fixed remote address retrieval
+
+ -- Andreas Roth <aroth@fast-srv03.fastprotect.net>  Wed, 13 Jan 2016 10:24:57 +0100
+
 arsoft-web-ddns (1.6) vivid; urgency=medium
 
   * rebuild with latest fixes

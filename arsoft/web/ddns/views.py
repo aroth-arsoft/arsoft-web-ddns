@@ -92,10 +92,11 @@ def home(request):
     return HttpResponse(response_data, status=response_status, content_type="text/plain")
 
 def whoami(request):
-    remote_address = _get_request_meta_param(request, 'REMOTE_ADDR', '')
-    remote_host = _get_request_meta_param(request, 'REMOTE_HOST', '')
+    address = _get_request_meta_param(request, 'REMOTE_ADDR', '')
+    if not address:
+        address = _get_request_meta_param(request, 'HTTP_REMOTE_ADDR', '')
     response_status = 200
-    response_data = '%s; %s' % (remote_address, remote_host)
+    response_data = '%s;' % (address)
     return HttpResponse(response_data, status=response_status, content_type="text/plain")
     
 def update(request):
@@ -107,8 +108,10 @@ def update(request):
     else:
         hostname = _get_request_param(request, 'host', '')
         address = _get_request_param(request, 'addr', '')
-        if len(address) == 0:
+        if not address:
             address = _get_request_meta_param(request, 'REMOTE_ADDR', '')
+            if not address:
+                address = _get_request_meta_param(request, 'HTTP_REMOTE_ADDR', '')
         password = _get_request_param(request, 'pw', '')
         if len(address):
             if 'type' in request.GET:
