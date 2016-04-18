@@ -3,11 +3,11 @@ Section: admin
 Priority: optional
 Maintainer: Andreas Roth <aroth@arsoft-online.com>
 Standards-Version: 3.9.6
-Build-Depends: debhelper (>= 9), python (>= 2.7)
-X-Python-Version: >=2.7
+Build-Depends: debhelper (>= 9), python (>= 3.2)
+X-Python-Version: >=3.2
 
 Package: arsoft-web-ddns
 Architecture: all
-Depends: arsoft-python-web (>= 1.42), python-sqlite, sqlite3, ${python:Depends}, ${misc:Depends}
+Depends: python3-arsoft-web (>= 1.42), python3-sqlite, sqlite3, ${python:Depends}, ${misc:Depends}
 Description: simple dynamic DNS service
  For updating the DNS records to match your current IP address in the internet.

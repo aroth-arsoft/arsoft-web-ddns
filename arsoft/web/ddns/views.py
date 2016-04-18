@@ -65,7 +65,7 @@ def _get_request_param(request, paramname, default_value=None):
     if paramname in request.GET:
         if isinstance(default_value, int):
             ret = int(request.GET[paramname])
-        elif isinstance(default_value, str) or isinstance(default_value, unicode):
+        elif isinstance(default_value, str):
             ret = str(request.GET[paramname])
         else:
             ret = request.GET[paramname]
@@ -78,7 +78,7 @@ def _get_request_meta_param(request, paramname, default_value=None):
     if paramname in request.META:
         if isinstance(default_value, int):
             ret = int(request.META[paramname])
-        elif isinstance(default_value, str) or isinstance(default_value, unicode):
+        elif isinstance(default_value, str):
             ret = str(request.META[paramname])
         else:
             ret = request.META[paramname]
@@ -189,7 +189,8 @@ def update(request):
                 except dns.exception.DNSException as e:
                     response_data = 'DNS error %s %s' % (str(type(e)), str(e))
                     response_status = 503
-                except socket.error as (error_num, error_msg):
+                except socket.error as e:
+                    (error_num, error_msg) = e
                     if error_num == errno.ECONNREFUSED:
                         response_data = 'Network error: Server %s refused connection (either DNS server is down or DNS server address is wrong)' % (dnsserver)
                         response_status = 503
