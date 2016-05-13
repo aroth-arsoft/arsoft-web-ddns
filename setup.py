@@ -1,10 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 from distutils.core import setup
 
 setup(name='arsoft-web-ddns',
-		version='1.7',
+		version='1.9',
 		description='Simple dynamic DNS service',
 		author='Andreas Roth',
 		author_email='aroth@arsoft-online.com',
