@@ -1,8 +1,14 @@
+arsoft-web-ddns (1.8) xenial; urgency=medium
+
+  * rebuild for python3 only
+
+ -- Andreas Roth <aroth@arsoft-online.com>  Fri, 13 May 2016 06:57:01 +0200
+
 arsoft-web-ddns (1.7) wily; urgency=medium
 
   * fixed remote address retrieval
 
- -- Andreas Roth <aroth@fast-srv03.fastprotect.net>  Wed, 13 Jan 2016 10:24:57 +0100
+ -- Andreas Roth <aroth@arsoft-online.com>  Wed, 13 Jan 2016 10:24:57 +0100
 
 arsoft-web-ddns (1.6) vivid; urgency=medium
 

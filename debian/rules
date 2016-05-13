@@ -1,12 +1,12 @@
 #!/usr/bin/make -f
 
-PYTHON2=$(shell pyversions -vr)
+PYTHON3=$(shell py3versions -vr)
 
 # Don't compress .py files
 DEB_COMPRESS_EXCLUDE := .py
 
 %:
-	dh $@ --buildsystem=python_distutils --with=python2
+	dh $@ --buildsystem=python_distutils --with=python3
 
 override_dh_clean:
 	dh_clean -O--buildsystem=python_distutils
@@ -17,4 +17,4 @@ override_dh_auto_install:
 	dh_auto_install -O--buildsystem=python_distutils
 	install -o www-data -g www-data -m 0750 -d $(CURDIR)/debian/arsoft-web-ddns/var/lib/arsoft/web/ddns
 	install -m 0755 -d $(CURDIR)/debian/arsoft-web-ddns/etc/arsoft/web/ddns/static
-	ln -s /usr/lib/python2.7/dist-packages/django/contrib/admin/static/admin $(CURDIR)/debian/arsoft-web-ddns/etc/arsoft/web/ddns/static/admin
+	ln -s /usr/lib/python$(PYTHON3)/dist-packages/django/contrib/admin/static/admin $(CURDIR)/debian/arsoft-web-ddns/etc/arsoft/web/ddns/static/admin
