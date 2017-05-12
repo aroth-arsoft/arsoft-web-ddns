@@ -59,8 +59,9 @@ class DDNSModel(models.Model):
         verbose_name_plural = "hosts"
 
     def _get_update_url(self):
+        from .views import update as views_update
         "Returns the URL for the updating the host."
-        return url_with_querystring(reverse('arsoft.web.ddns.views.update'),
+        return url_with_querystring(reverse(views_update),
                     host=self.hostname, pw=self.password)
     update_url = property(_get_update_url)
     def _get_address(self):

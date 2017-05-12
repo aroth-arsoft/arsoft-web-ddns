@@ -9,20 +9,21 @@ import sys
 import logging
 import time
 
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import json
 
 # version of this script
 __version__  = '1.0'
 
-def update_dns_record(service_url, hostname, address, password, recordtype='A'):
+def update_dns_record(service_url, hostname, address, password, recordtype=None):
     params = {}
     params['host'] = hostname
     params['addr'] = address
     params['pw'] = password
-    params['type'] = recordtype
+    if recordtype is not None:
+        params['type'] = recordtype
     query = ''
-    for (param_name, param_value) in params.iteritems():
+    for (param_name, param_value) in params.items():
         print((param_name, param_value))
         if len(query) > 0:
             query = query + '&'
@@ -32,7 +33,7 @@ def update_dns_record(service_url, hostname, address, password, recordtype='A'):
     print(full_url)
     
     try:
-        response = urllib2.urlopen(full_url)
+        response = urllib.request.urlopen(full_url)
         if response:
             response_data = json.loads(response.read())
             if response.getcode() == 200:
@@ -40,11 +41,11 @@ def update_dns_record(service_url, hostname, address, password, recordtype='A'):
             else:
                 print(response_data)
                 if 'error' in response_data:
-                    print(response_data['error'])
+                    print((response_data['error']))
                 ret = False
         else:
             ret = False
-    except urllib2.HTTPError as e:
+    except urllib.error.HTTPError as e:
         print(e)
         ret = False
     return ret
@@ -58,7 +59,7 @@ class ddnsApp(object):
         self._config = None
 
     def version(self):
-        print('Version: ' + str(__version__))
+        print(('Version: ' + str(__version__)))
         return 0
 
     def main(self):
@@ -69,9 +70,9 @@ class ddnsApp(object):
         parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='enable verbose output.')
         parser.add_argument('--version', dest='version', action='store_true', help='enable the version and exits.')
         parser.add_argument('--url', dest='service_url', default=self.DEFAULT_SERVICE_URL, type=str, help='URL of the DDNS web service.')
-        parser.add_argument('--rrtype', dest='rrtype', default='A', type=str, help='type of the record to update.')
+        parser.add_argument('--rrtype', dest='rrtype', type=str, help='type of the record to update.')
         parser.add_argument('--password', dest='password', type=str, help='password to access the DDNS web service.')
-        parser.add_argument('hostname', type=str, help='name of the DNS record name')
+        parser.add_argument('hostname', type=str, help='name of the DNS record name (e.g. host.example.com)')
         parser.add_argument('address', type=str, help='IP address for the DNS record')
 
         args = parser.parse_args()

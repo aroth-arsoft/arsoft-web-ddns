@@ -29,8 +29,12 @@ def _check_config():
         elif not os.access(dns_update_keyfile, os.R_OK):
             errors.append('DNS update key %s not readable' % dns_update_keyfile)
             ret = False
+
+    dbpath = settings.DATABASES['default']['NAME']
+    if not os.path.isfile(dbpath):
+        errors.append('Database file %s is missing' % dbpath)
+        ret = False
     return (ret, errors)
-    
 
 def parse_name(Origin, Name):
     try:
@@ -108,10 +112,12 @@ def update(request):
     else:
         hostname = _get_request_param(request, 'host', '')
         address = _get_request_param(request, 'addr', '')
-        if not address:
+        if not address or address == 'auto':
             address = _get_request_meta_param(request, 'REMOTE_ADDR', '')
             if not address:
                 address = _get_request_meta_param(request, 'HTTP_REMOTE_ADDR', '')
+        address_ipv4 = _get_request_param(request, 'ipv4', address)
+        address_ipv6 = _get_request_param(request, 'ipv6', address)
         password = _get_request_param(request, 'pw', '')
         if len(address):
             if 'type' in request.GET:
@@ -130,6 +136,8 @@ def update(request):
                 address_valid = False
         else:
             address_valid = False
+
+        logger.info('address_ipv4=%s, address_ipv6=%s' % (address_ipv4, address_ipv6))
 
         ttl = _get_request_param(request, 'ttl', settings.DEFAULT_TTL)
 
@@ -164,7 +172,7 @@ def update(request):
                         #print "Return code: %i" % response.rcode()
                         rcode = response.rcode()
                         if rcode == dns.rcode.NOERROR:
-                            host_from_db.updated = datetime.datetime.now()
+                            host_from_db.updated = datetime.datetime.utcnow()
                             host_from_db.save()
                             #response_data = 'Updated %s to %s in %s' % (hostname, address, Origin)
                             response_data = 'good %s' % (address)
